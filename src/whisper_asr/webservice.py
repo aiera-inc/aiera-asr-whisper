@@ -23,8 +23,11 @@ if ".en" not in core_model:
 if core_model not in ["tiny.en", "base.en", "small.en", "medium.en"]:
     core_model = "medium.en"
 
+is_cude = False
 if torch.cuda.is_available():
+    is_cude = True
     model = whisper.load_model(core_model).cuda()
+
 else:
     model = whisper.load_model(core_model)
 
@@ -68,12 +71,14 @@ def transcribe_url(audio_url: str):
         "language": "en"
     }
 
-    result = model.transcribe(audio, **options_dict)
+    with model_lock:
+        result = model.transcribe(audio, **options_dict)
 
     if os.path.exists(tmp_filename):
         os.remove(tmp_filename)
 
     result["model"] = core_model
+    result["using_cuda"] = is_cude
     result["duration_ms"] = (time_ms() - start_time)
 
     return result
@@ -97,12 +102,14 @@ def transcribe_bytes(audio_bytes: str = Form()):
         "language": "en"
     }
 
-    result = model.transcribe(audio, **options_dict)
+    with model_lock:
+        result = model.transcribe(audio, **options_dict)
 
     if os.path.exists(tmp_filename):
         os.remove(tmp_filename)
 
     result["model"] = core_model
+    result["using_cuda"] = is_cude
     result["duration_ms"] = (time_ms() - start_time)
 
     return result

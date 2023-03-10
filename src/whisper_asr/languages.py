@@ -1,4 +1,4 @@
-#from whisper/tokenizer.py
+# from whisper/tokenizer.py
 LANGUAGES = {
     "en": "english",
     "zh": "chinese",

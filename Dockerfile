@@ -1,6 +1,6 @@
 FROM python:3.9.9-slim
 
-ENV POETRY_VERSION=1.2.0
+ENV POETRY_VERSION=1.4.0
 ENV POETRY_VENV=/opt/poetry-venv
 
 RUN export DEBIAN_FRONTEND=noninteractive \

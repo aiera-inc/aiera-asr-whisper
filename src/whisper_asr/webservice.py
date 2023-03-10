@@ -5,16 +5,22 @@ import time
 import json
 import urllib
 import base64
+import bugsnag
 
 from fastapi import FastAPI, Form
 from starlette.responses import Response
+from bugsnag.asgi import BugsnagMiddlware
 
 import torch
 import whisper
 
 from threading import Lock
 
+
+bugsnag.configure(api_key=os.getenv("BUGSNAG_API_KEY"), project_root="/app")
+
 app = FastAPI()
+app = BugsnagMiddlware(app)
 
 # prep the English-only model for primary transcription...
 core_model_name = os.getenv("ASR_MODEL", "medium.en")
@@ -77,9 +83,7 @@ def transcribe_url(audio_url: str):
 
     audio = whisper.load_audio(tmp_filename)
 
-    options_dict = {
-        "language": "en"
-    }
+    options_dict = {"language": "en"}
 
     with model_lock:
         result = core_model.transcribe(audio, **options_dict)
@@ -89,7 +93,7 @@ def transcribe_url(audio_url: str):
 
     result["model"] = core_model_name
     result["using_cuda"] = is_cuda
-    result["duration_ms"] = (time_ms() - start_time)
+    result["duration_ms"] = time_ms() - start_time
 
     return result
 
@@ -102,15 +106,13 @@ def transcribe_bytes(audio_bytes: str = Form()):
 
     tmp_filename = f"{time_ms()}-bytes.mp3"
 
-    tmp_file = open(tmp_filename, 'wb')
+    tmp_file = open(tmp_filename, "wb")
     tmp_file.write(audio_obj)
     tmp_file.close()
 
     audio = whisper.load_audio(tmp_filename)
 
-    options_dict = {
-        "language": "en"
-    }
+    options_dict = {"language": "en"}
 
     with model_lock:
         result = core_model.transcribe(audio, **options_dict)
@@ -120,7 +122,7 @@ def transcribe_bytes(audio_bytes: str = Form()):
 
     result["model"] = core_model_name
     result["using_cuda"] = is_cuda
-    result["duration_ms"] = (time_ms() - start_time)
+    result["duration_ms"] = time_ms() - start_time
 
     return result
 
@@ -150,7 +152,7 @@ def detect_language_url(audio_url: str):
         "model": translate_model_name,
         "language": language,
         "probabilities": probs,
-        "duration_ms": (time_ms() - start_time)
+        "duration_ms": (time_ms() - start_time),
     }
 
 
@@ -173,7 +175,7 @@ def translate_url(audio_url: str):
 
     result["model"] = core_model_name
     result["using_cuda"] = is_cuda
-    result["duration_ms"] = (time_ms() - start_time)
+    result["duration_ms"] = time_ms() - start_time
 
     return result
 
@@ -186,7 +188,7 @@ def detect_language_bytes(audio_bytes: str = Form()):
 
     tmp_filename = f"{time_ms()}-bytes.mp3"
 
-    tmp_file = open(tmp_filename, 'wb')
+    tmp_file = open(tmp_filename, "wb")
     tmp_file.write(audio_obj)
     tmp_file.close()
 
@@ -206,7 +208,7 @@ def detect_language_bytes(audio_bytes: str = Form()):
         "model": translate_model_name,
         "language": language,
         "probabilities": probs,
-        "duration_ms": (time_ms() - start_time)
+        "duration_ms": (time_ms() - start_time),
     }
 
 
@@ -218,7 +220,7 @@ def translate_bytes(audio_bytes: str = Form()):
 
     tmp_filename = f"{time_ms()}-bytes.mp3"
 
-    tmp_file = open(tmp_filename, 'wb')
+    tmp_file = open(tmp_filename, "wb")
     tmp_file.write(audio_obj)
     tmp_file.close()
 
@@ -232,7 +234,7 @@ def translate_bytes(audio_bytes: str = Form()):
 
     result["model"] = core_model_name
     result["using_cuda"] = is_cuda
-    result["duration_ms"] = (time_ms() - start_time)
+    result["duration_ms"] = time_ms() - start_time
 
     return result
 
